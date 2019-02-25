@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
 
@@ -72,8 +73,8 @@ private:
 	Body *body;
 	Numerical *numeric;
 
- 	void kinematics_analysis();
-	void inverse_kinematics_analysis(double pos_d[3], double ori_d[3]);
+ 	void kinematics();
+	void inverse_kinematics(double pos_d[3], double ori_d[3]);
 		void calJacobian(double des_pos[3]);
 
 	void save_data();

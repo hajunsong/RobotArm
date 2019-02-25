@@ -2,7 +2,7 @@
 
 void load_data(string file_name, unsigned int row, unsigned int col, double *data) {
 	FILE *fp_in;
-	const int buffer = 10000;
+	const int buffer = 1000000;
 	char *ptr, basic[buffer], *token;
 	fopen_s(&fp_in, file_name.c_str(), "r");
 	uint i = 0, j = 0;
@@ -36,22 +36,22 @@ RobotArm::RobotArm(uint numbody, uint DOF) {
 
 	// read data
 	start_time = 0;
-	end_time = 1;
+	end_time = 2;
 	h = 0.001;
 	g = -9.80665;
 
 	double *A0_ptr = body[0].A0;
-	*(A0_ptr++) = 1;	*(A0_ptr++) = 0;	*(A0_ptr++) = 0;
-	*(A0_ptr++) = 0;	*(A0_ptr++) = 1;	*(A0_ptr++) = 0;
-	*(A0_ptr++) = 0;	*(A0_ptr++) = 0;	*(A0_ptr) = 1;
+	*(A0_ptr++) = -1;	*(A0_ptr++) = 0;	*(A0_ptr++) = 0;
+	*(A0_ptr++) = 0;	*(A0_ptr++) = 0;	*(A0_ptr++) = 1;
+	*(A0_ptr++) = 0;	*(A0_ptr++) = 1;	*(A0_ptr) = 0;
 	double *r0_ptr = body[0].r0;
-	*(r0_ptr++) = 2.7E-002;	*(r0_ptr++) = 2.7E-002;	*(r0_ptr++) = 5.2204989872E-002;
+	*(r0_ptr++) = 0;	*(r0_ptr++) = 0;	*(r0_ptr++) = 0;
 	double *C01_ptr = body[0].C01;
 	*(C01_ptr++) = 1;	*(C01_ptr++) = 0;	*(C01_ptr++) = 0;
 	*(C01_ptr++) = 0;	*(C01_ptr++) = 1;	*(C01_ptr++) = 0;
-	*(C01_ptr++) = 0;	*(C01_ptr++) = 0;	*(C01_ptr++) = 1;
+	*(C01_ptr++) = 0;	*(C01_ptr++) = 0;	*(C01_ptr) = 1;
 	double *s01p_ptr = body[0].s01p;
-	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0.0557950101;
+	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0;
 
 	double *Cij_ptr, *sijp_ptr;
 	switch (num_body) {
@@ -59,84 +59,72 @@ RobotArm::RobotArm(uint numbody, uint DOF) {
 			// body 6 variable
 			body[5].qi = 0;
 			body[5].qi_dot = 0;
-			body[5].mi = 0.8107375798;
-			body[5].qi_init = body[5].qi;
 			Cij_ptr = body[5].Cij;
 			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
 			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
 			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
 			sijp_ptr = body[5].sijp;
-			*(sijp_ptr++) = 0.1517;	*(sijp_ptr++) = -1.0E-003;	*(sijp_ptr++) = 1.0E-003;
+			*(sijp_ptr++) = -0.002;	*(sijp_ptr++) = -0.104529;	*(sijp_ptr++) = 0.00392469;
 			goto CASE5;
 		CASE5:
 		case 5:
 			// body 5 variable
-			body[4].qi = -0.261799387779586;
+			body[4].qi = 0.785398163397448;
 			body[4].qi_dot = 0;
-			body[4].mi = 1.2199454236;
-			body[4].qi_init = body[4].qi;
 			Cij_ptr = body[4].Cij;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
 			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;
 			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
 			sijp_ptr = body[4].sijp;
-			*(sijp_ptr++) = 0.0510000000;	*(sijp_ptr++) = -0.0020000000;	*(sijp_ptr++) = 0.0595000000;
+			*(sijp_ptr++) = 0.0878;	*(sijp_ptr++) = -2.20033e-16;	*(sijp_ptr++) = -0.04475;
 			goto CASE4;
 		CASE4:
 		case 4:
 			// body 4 variable
-			body[3].qi = 0;
+			body[3].qi = -1.0471975511966;
 			body[3].qi_dot = 0;
-			body[3].mi = 6.3213616986E-002;
-			body[3].qi_init = body[3].qi;
 			Cij_ptr = body[3].Cij;
 			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 0;
+			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
 			sijp_ptr = body[3].sijp;
-			*(sijp_ptr++) = -0.0570000000;	*(sijp_ptr++) = 0.0000000017;	*(sijp_ptr++) = 0.0429991604;
+			*(sijp_ptr++) = 0.0245;	*(sijp_ptr++) = 0.07675;	*(sijp_ptr++) = -0.0245;
 			goto CASE3;
 		CASE3:
 		case 3:
 			// body 3 variable
-			body[2].qi = -1.04719755117959;
+			body[2].qi = 0.523598775598299;
 			body[2].qi_dot = 0;
-			body[2].mi = 2.5064428652;
-			body[2].qi_init = body[2].qi;
 			Cij_ptr = body[2].Cij;
-			*(Cij_ptr++) = 0.0000000000;	*(Cij_ptr++) = 0.7071067812;	*(Cij_ptr++) = 0.7071067812;
-			*(Cij_ptr++) = 0.0000000000;	*(Cij_ptr++) = -0.7071067812;	*(Cij_ptr++) = 0.7071067812;
-			*(Cij_ptr++) = 1;				*(Cij_ptr++) = 0.0000000000;	*(Cij_ptr) = 0.0000000000;
+			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
 			sijp_ptr = body[2].sijp;
-			*(sijp_ptr++) = 0.2353297685;	*(sijp_ptr++) = 0.1929768844;	*(sijp_ptr++) = 0.0050000000;
+			*(sijp_ptr++) = 0.15;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = -4.3013e-11;
 			goto CASE2;
 		CASE2:
 		case 2:
 			// body 2 variable
-			body[1].qi = -0.261799387779586;
+			body[1].qi = 0.523598775598299;
 			body[1].qi_dot = 0;
-			body[1].mi = 1.4358314521;
-			body[1].qi_init = body[1].qi;
 			Cij_ptr = body[1].Cij;
-			*(Cij_ptr++) = 0.707106781184743;	*(Cij_ptr++) = -0.707106781188352;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0.707106781188352;	*(Cij_ptr++) = 0.707106781184743;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;					*(Cij_ptr++) = 0;					*(Cij_ptr) = 1;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = -1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
 			sijp_ptr = body[1].sijp;
-			*(sijp_ptr++) = 0.3342028602;	*(sijp_ptr++) = 2.9981665639E-002;	*(sijp_ptr++) = 0;
+			*(sijp_ptr++) = 0;	*(sijp_ptr++) = -0.15175;	*(sijp_ptr++) = -6.77005e-14;
 			goto CASE1;
 		CASE1:
 		case 1:
 			// body 1 variable
-			body[0].qi = 0;
+			body[0].qi = -0.785398163397448;
 			body[0].qi_dot = 0;
-			body[0].mi = 0.8465182847;
-			body[0].qi_init = body[0].qi;
 			Cij_ptr = body[0].Cij;
-			*(Cij_ptr++) = 1;						*(Cij_ptr++) = -1.02068239344618e-11;	*(Cij_ptr++) = -1.02068239345139e-11;
-			*(Cij_ptr++) = 1.02068239344618e-11;	*(Cij_ptr++) = -5.10341196736114e-12;	*(Cij_ptr++) = 1;
-			*(Cij_ptr++) = -1.02068239345139e-11;	*(Cij_ptr++) = -1;						*(Cij_ptr++) = -5.10341196725696e-12;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;
+			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+			*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;	*(Cij_ptr) = 0;
 			sijp_ptr = body[0].sijp;
-			*(sijp_ptr++) = 0.0000000000;	*(sijp_ptr++) = 1.2E-002;	*(sijp_ptr++) = 3.0E-002;
+			*(sijp_ptr++) = -0.0245;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = 0.032;
 	}
 
 	// define Y vector
@@ -180,19 +168,20 @@ void RobotArm::run_kinematics()
 	sprintf_s(file_name, 256, "hj_kinematics_result.txt");
 	fopen_s(&fp, file_name, "w+");
 
-	double *input = new double[1001 * 7];
+	uint data_size = 2001;
+	double *input = new double[data_size * 7];
 
-	load_data("q_input.txt", 1001, 7, input);
+	load_data("kinematics_input_q.txt", data_size, 7, input);
 
-	for(uint indx = 0; indx < 1001; indx++) {
-		body[0].qi = input[indx*7+1];
-		body[1].qi = input[indx*7+2];
-		body[2].qi = input[indx*7+3];
-		body[3].qi = input[indx*7+4];
-		body[4].qi = input[indx*7+5];
-		body[5].qi = input[indx*7+6];
+	for(uint indx = 0; indx < data_size; indx++) {
+		body[0].qi = input[indx * 7 + 1] * M_PI / 180.0;
+		body[1].qi = input[indx * 7 + 2] * M_PI / 180.0;
+		body[2].qi = input[indx * 7 + 3] * M_PI / 180.0;
+		body[3].qi = input[indx * 7 + 4] * M_PI / 180.0;
+		body[4].qi = input[indx * 7 + 5] * M_PI / 180.0;
+		body[5].qi = input[indx * 7 + 6] * M_PI / 180.0;
 
-		kinematics_analysis();
+		kinematics();
 
 		save_data();
 
@@ -209,22 +198,23 @@ void RobotArm::run_inverse_kinematics() {
 	sprintf_s(file_name, 256, "hj_inverse_kinematics_result.txt");
 	fopen_s(&fp, file_name, "w+");
 
-	double *input = new double[1001 * 7];
+	uint data_size = 2001;
+	double *input = new double[data_size * 13];
 
-	load_data("adams_end_ik_input.txt", 1001, 7, input);
+	load_data("inverse_kinematics_input_end.txt", data_size, 13, input);
 
 	double pos_d[3], ori_d[3];
-	for (uint indx = 0; indx < 1001; indx++) {
-		pos_d[0] = input[indx * 7 + 1];
-		pos_d[1] = input[indx * 7 + 2];
-		pos_d[2] = input[indx * 7 + 3];
-		ori_d[0] = input[indx * 7 + 4];
-		ori_d[1] = input[indx * 7 + 5];
-		ori_d[2] = input[indx * 7 + 6];
+	for (uint indx = 0; indx < data_size; indx++) {
+		pos_d[0] = input[indx * 13 + 1];
+		pos_d[1] = input[indx * 13 + 2];
+		pos_d[2] = input[indx * 13 + 3];
+		ori_d[0] = input[indx * 13 + 4];
+		ori_d[1] = input[indx * 13 + 5];
+		ori_d[2] = input[indx * 13 + 6];
 
-		kinematics_analysis();
+		kinematics();
 
-		inverse_kinematics_analysis(pos_d, ori_d);
+		inverse_kinematics(pos_d, ori_d);
 
 		save_data();
 
@@ -237,7 +227,7 @@ void RobotArm::run_inverse_kinematics() {
 	fclose(fp);
 }
 
-void RobotArm::kinematics_analysis()
+void RobotArm::kinematics()
 {
 	for (uint indx = 0; indx < num_body; indx++) {
 		// Orientation
@@ -283,7 +273,7 @@ void RobotArm::kinematics_analysis()
 				}
 			}
 		}
-		// Position
+		// position
 		if (indx == 0) {
 			double s01[3] = { 0, };
 			for (uint i = 0; i < 3; i++) {
@@ -310,7 +300,7 @@ void RobotArm::kinematics_analysis()
 			body[indx].ric[i] = body[indx].ri[i] + body[indx].rhoi[i];
 		}
 	}
-	// end point
+	// End point
 	for (uint i = 0; i < 3; i++) {
 		body[5].sij[i] = 0;
 		for (uint j = 0; j < 3; j++) {
@@ -323,7 +313,7 @@ void RobotArm::kinematics_analysis()
 	body[5].yaw = atan2(body[5].Ai[1 * 3 + 0], body[5].Ai[0 * 3 + 0]);
 }
 
-void RobotArm::inverse_kinematics_analysis(double des_pos[3], double des_ang[3]) {
+void RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 	for (uint i = 0; i < 3; i++) {
 		PH_pos[i] = body[5].re[i] - des_pos[i];
 	}
@@ -383,7 +373,7 @@ void RobotArm::inverse_kinematics_analysis(double des_pos[3], double des_ang[3])
 	//}
 	//int NRcount = 0;
 
-	//while (err_max >= 1e-4 && NRcount < 5) {
+	//while (err_max >= 1e-6 && NRcount < 10) {
 	//	NRcount++;
 
 	//	calJacobian(des_pos);
@@ -402,7 +392,7 @@ void RobotArm::inverse_kinematics_analysis(double des_pos[3], double des_ang[3])
 	//	for (uint i = 0; i < 6; i++) {
 	//		for (uint j = 0; j < 6; j++) {
 	//			for (uint k = 0; k < 6; k++) {
-	//				temp[j * 6 + k] = V[j*6+i] * U[k * 6 + i];
+	//				temp[j * 6 + k] = V[j * 6 + i] * U[k * 6 + i];
 	//			}
 	//		}
 	//		for (uint j = 0; j < 6; j++) {
@@ -427,7 +417,7 @@ void RobotArm::inverse_kinematics_analysis(double des_pos[3], double des_ang[3])
 	//		body[i].qi += -delta_q[i];
 	//	}
 
-	//	kinematics_analysis();
+	//	kinematics();
 
 	//	for (uint i = 0; i < 3; i++) {
 	//		PH_pos[i] = body[5].re[i] - des_pos[i];
@@ -477,6 +467,6 @@ void RobotArm::save_data() {
 		fprintf_s(fp, "%.7f\t", body[i].qi);
 	}
 	fprintf_s(fp, "%.7f\t%.7f\t%.7f\t", body[5].re[0], body[5].re[1], body[5].re[2]);
-	fprintf_s(fp, "%.7f\t%.7f\t%.7f", body[5].roll, -body[5].pitch, body[5].yaw);
+	fprintf_s(fp, "%.7f\t%.7f\t%.7f", body[5].roll, body[5].pitch, body[5].yaw);
 	fprintf_s(fp, "\n");
 }
