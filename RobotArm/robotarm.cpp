@@ -25,14 +25,16 @@ RobotArm::RobotArm(uint numbody, uint DOF) {
 	num_body = numbody;
 	dof = DOF;
 
-	PH = new double[num_body * dof];
-	PH_pos = new double[num_body * 3];
-	PH_ori = new double[num_body * 3];
+	PH = new double[dof];
+	PH_pos = new double[3 * num_body];
+	PH_ori = new double[3 * num_body];
 	delta_q = new double[dof];
 	J = new double[num_body * dof];
 	JD = new double[dof * num_body];
 
 	body = new Body[num_body];
+
+	lamda = 0.0001;
 
 	// read data
 	start_time = 0;
@@ -54,78 +56,65 @@ RobotArm::RobotArm(uint numbody, uint DOF) {
 	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0;	*(s01p_ptr++) = 0;
 
 	double *Cij_ptr, *sijp_ptr;
-	switch (num_body) {
-		case 6:
-			// body 6 variable
-			body[5].qi = 0;
-			body[5].qi_dot = 0;
-			Cij_ptr = body[5].Cij;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
-			sijp_ptr = body[5].sijp;
-			*(sijp_ptr++) = -0.002;	*(sijp_ptr++) = -0.104529;	*(sijp_ptr++) = 0.00392469;
-			goto CASE5;
-		CASE5:
-		case 5:
-			// body 5 variable
-			body[4].qi = 0.785398163397448;
-			body[4].qi_dot = 0;
-			Cij_ptr = body[4].Cij;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
-			sijp_ptr = body[4].sijp;
-			*(sijp_ptr++) = 0.0878;	*(sijp_ptr++) = -2.20033e-16;	*(sijp_ptr++) = -0.04475;
-			goto CASE4;
-		CASE4:
-		case 4:
-			// body 4 variable
-			body[3].qi = -1.0471975511966;
-			body[3].qi_dot = 0;
-			Cij_ptr = body[3].Cij;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
-			sijp_ptr = body[3].sijp;
-			*(sijp_ptr++) = 0.0245;	*(sijp_ptr++) = 0.07675;	*(sijp_ptr++) = -0.0245;
-			goto CASE3;
-		CASE3:
-		case 3:
-			// body 3 variable
-			body[2].qi = 0.523598775598299;
-			body[2].qi_dot = 0;
-			Cij_ptr = body[2].Cij;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
-			sijp_ptr = body[2].sijp;
-			*(sijp_ptr++) = 0.15;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = -4.3013e-11;
-			goto CASE2;
-		CASE2:
-		case 2:
-			// body 2 variable
-			body[1].qi = 0.523598775598299;
-			body[1].qi_dot = 0;
-			Cij_ptr = body[1].Cij;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = -1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
-			sijp_ptr = body[1].sijp;
-			*(sijp_ptr++) = 0;	*(sijp_ptr++) = -0.15175;	*(sijp_ptr++) = -6.77005e-14;
-			goto CASE1;
-		CASE1:
-		case 1:
-			// body 1 variable
-			body[0].qi = -0.785398163397448;
-			body[0].qi_dot = 0;
-			Cij_ptr = body[0].Cij;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;
-			*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
-			*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;	*(Cij_ptr) = 0;
-			sijp_ptr = body[0].sijp;
-			*(sijp_ptr++) = -0.0245;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = 0.032;
-	}
+	// body 1 variable
+	body[0].qi = -0.785398163397448;
+	body[0].qi_dot = 0;
+	Cij_ptr = body[0].Cij;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;
+	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = -1;	*(Cij_ptr) = 0;
+	sijp_ptr = body[0].sijp;
+	*(sijp_ptr++) = -0.0245;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = 0.032;
+
+	// body 2 variable
+	body[1].qi = 0.523598775598299;
+	body[1].qi_dot = 0;
+	Cij_ptr = body[1].Cij;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = -1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
+	sijp_ptr = body[1].sijp;
+	*(sijp_ptr++) = 0;	*(sijp_ptr++) = -0.15175;	*(sijp_ptr++) = -6.77005e-14;
+
+	// body 3 variable
+	body[2].qi = 0.523598775598299;
+	body[2].qi_dot = 0;
+	Cij_ptr = body[2].Cij;
+	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
+	sijp_ptr = body[2].sijp;
+	*(sijp_ptr++) = 0.15;	*(sijp_ptr++) = 0;	*(sijp_ptr++) = -4.3013e-11;
+
+	// body 4 variable
+	body[3].qi = -1.0471975511966;
+	body[3].qi_dot = 0;
+	Cij_ptr = body[3].Cij;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
+	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
+	sijp_ptr = body[3].sijp;
+	*(sijp_ptr++) = 0.0245;	*(sijp_ptr++) = 0.07675;	*(sijp_ptr++) = -0.0245;
+
+	// body 5 variable
+	body[4].qi = 0.785398163397448;
+	body[4].qi_dot = 0;
+	Cij_ptr = body[4].Cij;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;
+	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr) = 0;
+	sijp_ptr = body[4].sijp;
+	*(sijp_ptr++) = 0.0878;	*(sijp_ptr++) = -2.20033e-16;	*(sijp_ptr++) = -0.04475;
+
+	// body 6 variable
+	body[5].qi = 0;
+	body[5].qi_dot = 0;
+	Cij_ptr = body[5].Cij;
+	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 1;	*(Cij_ptr++) = 0;
+	*(Cij_ptr++) = 0;	*(Cij_ptr++) = 0;	*(Cij_ptr) = 1;
+	sijp_ptr = body[5].sijp;
+	*(sijp_ptr++) = -0.002;	*(sijp_ptr++) = -0.104529;	*(sijp_ptr++) = 0.00392469;
 
 	// define Y vector
 	Y = new double[2 * num_body];
@@ -301,25 +290,34 @@ void RobotArm::kinematics()
 		}
 	}
 	// End point
+	int indx = num_body - 1;
 	for (uint i = 0; i < 3; i++) {
-		body[5].sij[i] = 0;
+		body[indx].sij[i] = 0;
 		for (uint j = 0; j < 3; j++) {
-			body[5].sij[i] += body[5].Ai[i * 3 + j] * body[5].sijp[j];
+			body[indx].sij[i] += body[indx].Ai[i * 3 + j] * body[indx].sijp[j];
 		}
-		body[5].re[i] = body[5].ri[i] + body[5].sij[i];
+		body[indx].re[i] = body[indx].ri[i] + body[indx].sij[i];
 	}
-	body[5].roll = atan2(body[5].Ai[2 * 3 + 1], body[5].Ai[2 * 3 + 2]);
-	body[5].pitch = atan2(-body[5].Ai[2 * 3 + 0], sqrt(pow(body[5].Ai[2 * 3 + 1], 2) + pow(body[5].Ai[2 * 3 + 2], 2)));
-	body[5].yaw = atan2(body[5].Ai[1 * 3 + 0], body[5].Ai[0 * 3 + 0]);
+	for (uint i = 0; i < 3; i++) {
+		for (uint j = 0; j < 3; j++) {
+			body[indx].Ae[i * 3 + j] = 0;
+			for (uint k = 0; k < 3; k++) {
+				body[indx].Ae[i * 3 + j] += body[indx].Ai[i * 3 + k] * body[indx].Cij[k * 3 + j];
+			}
+		}
+	}
+	body[indx].roll = atan2(body[indx].Ae[2 * 3 + 1], body[indx].Ae[2 * 3 + 2]);
+	body[indx].pitch = atan2(-body[indx].Ae[2 * 3 + 0], sqrt(pow(body[indx].Ae[2 * 3 + 1], 2) + pow(body[indx].Ae[2 * 3 + 2], 2)));
+	body[indx].yaw = atan2(body[indx].Ae[1 * 3 + 0], body[indx].Ae[0 * 3 + 0]);
 }
 
 void RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 	for (uint i = 0; i < 3; i++) {
-		PH_pos[i] = body[5].re[i] - des_pos[i];
+		PH_pos[i] = body[num_body - 1].re[i] - des_pos[i];
 	}
-	PH_ori[0] = body[5].roll - des_ang[0];
-	PH_ori[1] = body[5].pitch + des_ang[1];
-	PH_ori[2] = body[5].yaw - des_ang[2];
+	PH_ori[0] = body[num_body - 1].roll - des_ang[0];
+	PH_ori[1] = body[num_body - 1].pitch - des_ang[1];
+	PH_ori[2] = body[num_body - 1].yaw - des_ang[2];
 
 	for (uint i = 0; i < 3; i++) {
 		PH[i] = PH_pos[i];
@@ -329,25 +327,23 @@ void RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 	calJacobian(des_pos);
 
 	double *U, *s, *V;
-	U = new double[6 * 6];
-	s = new double[6];
-	V = new double[6 * 6];
+	U = new double[dof * num_body];
+	s = new double[num_body];
+	V = new double[num_body*num_body];
 
-	numeric->svdcmp(J, 6, 6, U, s, V);
+	numeric->svdcmp(J, dof, num_body, U, s, V);
 
-	double lamda = 0.0001;
-	int m_size = 6;
-	memset(JD, 0, sizeof(double) * m_size*m_size);
-	double temp[36] = { 0, };
-	for (uint i = 0; i < 6; i++) {
-		for (uint j = 0; j < 6; j++) {
-			for (uint k = 0; k < 6; k++) {
-				temp[j * 6 + k] = V[j * 6 + i] * U[k * 6 + i];
+	memset(JD, 0, sizeof(double) * num_body*dof);
+	double *temp = new double[num_body*dof];
+	for (uint i = 0; i < dof; i++) {
+		for (uint j = 0; j < num_body; j++) {
+			for (uint k = 0; k < dof; k++) {
+				temp[j * dof + k] = V[j * num_body + i] * U[k * num_body + i];
 			}
 		}
-		for (uint j = 0; j < 6; j++) {
-			for (uint k = 0; k < 6; k++) {
-				JD[j * 6 + k] += (s[i] / (pow(s[i], 2) + pow(lamda, 2)))*temp[j * 6 + k];
+		for (uint j = 0; j < num_body; j++) {
+			for (uint k = 0; k < dof; k++) {
+				JD[j * dof + k] += (s[i] / (pow(s[i], 2) + pow(lamda, 2)))*temp[j * dof + k];
 			}
 		}
 	}
@@ -355,6 +351,7 @@ void RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 	delete[] s;
 	delete[] U;
 	delete[] V;
+	delete[] temp;
 
 	memset(delta_q, 0, sizeof(double) * 6);
 	for (uint i = 0; i < 6; i++) {
@@ -367,80 +364,84 @@ void RobotArm::inverse_kinematics(double des_pos[3], double des_ang[3]) {
 		body[i].qi += -delta_q[i];
 	}
 
-	//double err_max = 0;
-	//for (uint i = 0; i < 6; i++) {
-	//	err_max = abs(PH[i]) > err_max ? abs(PH[i]) : err_max;
-	//}
-	//int NRcount = 0;
+#if 0
+	double err_max = 0;
+	for (uint i = 0; i < 6; i++) {
+		err_max = abs(PH[i]) > err_max ? abs(PH[i]) : err_max;
+	}
+	int NRcount = 0;
 
-	//while (err_max >= 1e-6 && NRcount < 10) {
-	//	NRcount++;
+	while (err_max >= 1e-6 && NRcount < 10) {
+		NRcount++;
 
-	//	calJacobian(des_pos);
+		calJacobian(des_pos);
 
-	//	double *U, *s, *V;
-	//	U = new double[36];
-	//	s = new double[6];
-	//	V = new double[36];
+		double *U, *s, *V;
+		U = new double[36];
+		s = new double[6];
+		V = new double[36];
 
-	//	numeric->svdcmp(J, 6, 6, U, s, V);
+		numeric->svdcmp(J, 6, 6, U, s, V);
 
-	//	double lamda = 0.0001;
-	//	int m_size = 6;
-	//	memset(JD, 0, sizeof(double) * m_size*m_size);
-	//	double temp[36] = { 0, };
-	//	for (uint i = 0; i < 6; i++) {
-	//		for (uint j = 0; j < 6; j++) {
-	//			for (uint k = 0; k < 6; k++) {
-	//				temp[j * 6 + k] = V[j * 6 + i] * U[k * 6 + i];
-	//			}
-	//		}
-	//		for (uint j = 0; j < 6; j++) {
-	//			for (uint k = 0; k < 6; k++) {
-	//				JD[j * 6 + k] += (s[i] / (pow(s[i], 2) + pow(lamda, 2)))*temp[j * 6 + k];
-	//			}
-	//		}
-	//	}
+		double lamda = 0.0001;
+		int m_size = 6;
+		memset(JD, 0, sizeof(double) * m_size*m_size);
+		double temp[36] = { 0, };
+		for (uint i = 0; i < 6; i++) {
+			for (uint j = 0; j < 6; j++) {
+				for (uint k = 0; k < 6; k++) {
+					temp[j * 6 + k] = V[j * 6 + i] * U[k * 6 + i];
+				}
+			}
+			for (uint j = 0; j < 6; j++) {
+				for (uint k = 0; k < 6; k++) {
+					JD[j * 6 + k] += (s[i] / (pow(s[i], 2) + pow(lamda, 2)))*temp[j * 6 + k];
+				}
+			}
+		}
 
-	//	delete[] s;
-	//	delete[] U;
-	//	delete[] V;
+		delete[] s;
+		delete[] U;
+		delete[] V;
 
-	//	memset(delta_q, 0, sizeof(double) * 6);
-	//	for (uint i = 0; i < 6; i++) {
-	//		for (uint j = 0; j < 6; j++) {
-	//			delta_q[i] += JD[i * 6 + j] * PH[j];
-	//		}
-	//	}
+		memset(delta_q, 0, sizeof(double) * 6);
+		for (uint i = 0; i < 6; i++) {
+			for (uint j = 0; j < 6; j++) {
+				delta_q[i] += JD[i * 6 + j] * PH[j];
+			}
+		}
 
-	//	for (uint i = 0; i < 6; i++) {
-	//		body[i].qi += -delta_q[i];
-	//	}
+		for (uint i = 0; i < 6; i++) {
+			body[i].qi += -delta_q[i];
+		}
 
-	//	kinematics();
+		kinematics();
 
-	//	for (uint i = 0; i < 3; i++) {
-	//		PH_pos[i] = body[5].re[i] - des_pos[i];
-	//	}
-	//	PH_ori[0] = body[5].roll - des_ang[0];
-	//	PH_ori[1] = body[5].pitch + des_ang[1];
-	//	PH_ori[2] = body[5].yaw - des_ang[2];
+		for (uint i = 0; i < 3; i++) {
+			PH_pos[i] = body[5].re[i] - des_pos[i];
+		}
+		PH_ori[0] = body[5].roll - des_ang[0];
+		PH_ori[1] = body[5].pitch + des_ang[1];
+		PH_ori[2] = body[5].yaw - des_ang[2];
 
-	//	for (uint i = 0; i < 3; i++) {
-	//		PH[i] = PH_pos[i];
-	//		PH[i + 3] = PH_ori[i];
-	//	}
+		for (uint i = 0; i < 3; i++) {
+			PH[i] = PH_pos[i];
+			PH[i + 3] = PH_ori[i];
+		}
 
-	//	double err_max = 0;
-	//	for (uint i = 0; i < 6; i++) {
-	//		err_max = abs(PH[i]) > err_max ? abs(PH[i]) : err_max;
-	//	}
-	//}
+		double err_max = 0;
+		for (uint i = 0; i < 6; i++) {
+			err_max = abs(PH[i]) > err_max ? abs(PH[i]) : err_max;
+		}
+	}
+#endif
 }
 
 void RobotArm::calJacobian(double des_pos[3])
 {
-	double Jv[3 * 6], Jw[3 * 6];
+	//double Jv[3 * 6], Jw[3 * 6];
+	double *Jv = new double[3 * num_body];
+	double *Jw = new double[3 * num_body];
 	for (uint indx = 0; indx < 6; indx++) {
 		for (uint i = 0; i < 3; i++) {
 			body[indx].oi[i] = des_pos[i] - body[indx].ri[i];
@@ -453,12 +454,12 @@ void RobotArm::calJacobian(double des_pos[3])
 			}
 		}
 		for (uint j = 0; j < 3; j++) {
-			Jv[j * 6 + indx] = body[indx].Jvi[j];
-			Jw[j * 6 + indx] = body[indx].Hi[j];
+			Jv[j * num_body + indx] = body[indx].Jvi[j];
+			Jw[j * num_body + indx] = body[indx].Hi[j];
 		}
 	}
-	memcpy(J, Jv, sizeof(double) * 3 * 6);
-	memcpy(J + 3 * 6, Jw, sizeof(double) * 3 * 6);
+	memcpy(J, Jv, sizeof(double) * 3 * num_body);
+	memcpy(J + 3 * num_body, Jw, sizeof(double) * 3 * num_body);
 }
 
 void RobotArm::save_data() {
@@ -466,7 +467,7 @@ void RobotArm::save_data() {
 	for (uint i = 0; i < num_body; i++) {
 		fprintf_s(fp, "%.7f\t", body[i].qi);
 	}
-	fprintf_s(fp, "%.7f\t%.7f\t%.7f\t", body[5].re[0], body[5].re[1], body[5].re[2]);
-	fprintf_s(fp, "%.7f\t%.7f\t%.7f", body[5].roll, body[5].pitch, body[5].yaw);
+	fprintf_s(fp, "%.7f\t%.7f\t%.7f\t", body[num_body - 1].re[0], body[num_body - 1].re[1], body[num_body - 1].re[2]);
+	fprintf_s(fp, "%.7f\t%.7f\t%.7f", body[num_body - 1].roll, body[num_body - 1].pitch, body[num_body - 1].yaw);
 	fprintf_s(fp, "\n");
 }

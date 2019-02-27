@@ -73,6 +73,8 @@ private:
 	Body *body;
 	Numerical *numeric;
 
+	double lamda;
+
  	void kinematics();
 	void inverse_kinematics(double pos_d[3], double ori_d[3]);
 		void calJacobian(double des_pos[3]);
