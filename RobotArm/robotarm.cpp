@@ -467,6 +467,7 @@ void RobotArm::save_data() {
 	for (uint i = 0; i < num_body; i++) {
 		fprintf_s(fp, "%.7f\t", body[i].qi);
 	}
+	kinematics();
 	fprintf_s(fp, "%.7f\t%.7f\t%.7f\t", body[num_body - 1].re[0], body[num_body - 1].re[1], body[num_body - 1].re[2]);
 	fprintf_s(fp, "%.7f\t%.7f\t%.7f", body[num_body - 1].roll, body[num_body - 1].pitch, body[num_body - 1].yaw);
 	fprintf_s(fp, "\n");
